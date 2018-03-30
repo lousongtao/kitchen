@@ -57,13 +57,6 @@
         android:layout_gravity="start">
 
         <TextView
-            android:id="@+id/drawermenu_refreshdata"
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:paddingTop="20dp"
-            android:text="REFRESH DATA"
-            android:textSize="30sp" />
-        <TextView
             android:id="@+id/drawermenu_uploaderrorlog"
             android:layout_width="match_parent"
             android:layout_height="80dp"

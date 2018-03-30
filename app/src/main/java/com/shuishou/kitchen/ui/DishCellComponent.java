@@ -28,13 +28,15 @@ class DishCellComponent {
     private Button btnFlavor;
     private Dish dish;
     private MainActivity mainActivity;
-    private DishSoldListener listener;
+    private DishSoldListener dishSoldListener;
+    private ShowDishConfigListener showDishConfigListener;
     public final static String TXT_ONSALE = "On Sale";
     public final static String TXT_SOLDOUT = "SOLD OUT";
     public DishCellComponent(final MainActivity mainActivity, Dish _dish){
         this.mainActivity = mainActivity;
         this.dish = _dish;
-        listener = DishSoldListener.getInstance(mainActivity);
+        dishSoldListener = DishSoldListener.getInstance(mainActivity);
+        showDishConfigListener = ShowDishConfigListener.getInstance(mainActivity);
         foodCellView = LayoutInflater.from(mainActivity).inflate(R.layout.dishcell_layout, null);
         LinearLayout functionLayout = (LinearLayout) foodCellView.findViewById(R.id.function_layout);
         DishNameTextView foodNameText = (DishNameTextView) foodCellView.findViewById(R.id.foodNameText);
@@ -43,12 +45,13 @@ class DishCellComponent {
         btnSell.setText(dish.isSoldOut() ? TXT_SOLDOUT : TXT_ONSALE);
         btnSell.setBackgroundResource(dish.isSoldOut() ? R.color.color_soldout : R.color.color_onsale);
         btnSell.setTag(dish);
-        btnSell.setOnClickListener(listener);
+        btnSell.setOnClickListener(dishSoldListener);
 
         if (dish.getConfigGroups() != null && !dish.getConfigGroups().isEmpty()){
             btnFlavor = new Button(mainActivity);
             btnFlavor.setText("Flavor");
             btnFlavor.setTag(dish);
+            btnFlavor.setOnClickListener(showDishConfigListener);
             functionLayout.addView(btnFlavor);
         }
     }

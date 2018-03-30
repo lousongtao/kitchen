@@ -33,10 +33,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by Administrator on 2017/6/9.
@@ -53,7 +49,6 @@ public class HttpOperator {
 //    private ArrayList<String> listDishPictures = new ArrayList<>();
     private static final int WHAT_VALUE_QUERYMENU = 1;
     private static final int WHAT_VALUE_LOGIN = 2;
-    private static final int WHAT_VALUE_QUERYMENUVERSION = 5;
 
     private Gson gson = new Gson();
 
@@ -71,9 +66,6 @@ public class HttpOperator {
                 case WHAT_VALUE_LOGIN :
                     doResponseLogin(response);
                     break;
-                case WHAT_VALUE_QUERYMENUVERSION:
-                    doResponseQueryMenuVersion(response);
-                    break;
                 default:
             }
         }
@@ -82,11 +74,9 @@ public class HttpOperator {
         public void onFailed(int what, Response<JSONObject> response) {
             Log.e("Http failed", "what = "+ what + "\nresponse = "+ response.get());
             MainActivity.LOG.error("Response Listener On Faid. what = "+ what + "\nresponse = "+ response.get());
-            String msg = InstantValue.NULLSTRING;
             switch (what){
                 case WHAT_VALUE_QUERYMENU :
-                    msg = "Failed to load Menu data. Please restart app!";
-                    CommonTool.popupWarnDialog(mainActivity, R.drawable.error, "WRONG", msg);
+                    CommonTool.popupWarnDialog(mainActivity, R.drawable.error, "WRONG", "Failed to load Menu data. Please restart app!");
                     break;
                 case WHAT_VALUE_LOGIN :
                     CommonTool.popupWarnDialog(loginActivity, R.drawable.error, "WRONG", "Failed to login. Please retry!");
@@ -148,28 +138,10 @@ public class HttpOperator {
             ArrayList<Category1> c1s = result.data;
             sortAllMenu(c1s);
             mainActivity.setMenu(c1s);
-            mainActivity.persistMenu();
-            mainActivity.popRestartDialog("Data refresh finish successfully. Please restart the app.");
+            mainActivity.buildMenu();
         }else {
             Log.e(logTag, "doResponseQueryMenu: get FALSE for query confirm code");
             MainActivity.LOG.error("doResponseQueryMenu: get FALSE for query confirm code");
-        }
-    }
-
-    private void doResponseQueryMenuVersion(Response<JSONObject> response){
-        if (response.getException() != null){
-            Log.e(logTag, "doResponseQueryMenuVersion: " + response.getException().getMessage() );
-            MainActivity.LOG.error("doResponseQueryMenuVersion: " + response.getException().getMessage());
-            sendErrorMessageToToast("Http:doResponseQueryMenuVersion: " + response.getException().getMessage());
-            return;
-        }
-        HttpResult<Integer> result = gson.fromJson(response.get().toString(), new TypeToken<HttpResult<Integer>>(){}.getType());
-        if (result.success){
-            mainActivity.getDbOperator().saveObjectByCascade(new MenuVersion(1, result.data));
-        } else {
-            Log.e(logTag, "doResponseQueryMenuVersion: get FALSE for query menu version");
-            MainActivity.LOG.error("doResponseQueryMenuVersion: get FALSE for query menu version");
-            CommonTool.popupWarnDialog(mainActivity, R.drawable.error, "WRONG", "Failed to load Menu version data. Please redo synchronization action!");
         }
     }
 
@@ -181,11 +153,6 @@ public class HttpOperator {
         requestQueue.add(WHAT_VALUE_QUERYMENU, menuRequest, responseListener);
     }
 
-    //load menu version
-    public void loadMenuVersionData(){
-        Request<JSONObject> mvRequest = NoHttp.createJsonObjectRequest(InstantValue.URL_TOMCAT + "/menu/getlastmenuversion", RequestMethod.POST);
-        requestQueue.add(WHAT_VALUE_QUERYMENUVERSION, mvRequest, responseListener);
-    }
     //sort by sequence
     private void sortAllMenu(ArrayList<Category1> c1s){
         if (c1s != null){
@@ -220,156 +187,6 @@ public class HttpOperator {
 
     private void onFailedLoadMenu(){
         //TODO: require restart app
-    }
-
-    /**
-     * check the menu version difference between client and server
-     * @param localVersion
-     * @return if same return null, otherwise return a map including changed dishes and dishconfigs
-     */
-    public HashMap<String, ArrayList<Integer>> checkMenuVersion(int localVersion){
-        Request<JSONObject> request = NoHttp.createJsonObjectRequest(InstantValue.URL_TOMCAT + "/menu/checkmenuversion", RequestMethod.POST);
-        request.add("versionId", localVersion);
-        Response<JSONObject> response = NoHttp.startRequestSync(request);
-        if (response.getException() != null){
-            Log.e(logTag, "chechMenuVersion: There are Exception to checkmenuversion\n"+ response.getException().getMessage() );//TODO:
-            MainActivity.LOG.error("chechMenuVersion: There are Exception to checkmenuversion\n"+ response.getException().getMessage() );
-            sendErrorMessageToToast("Http:chechMenuVersion: " + response.getException().getMessage());
-            return null;
-        }
-        HttpResult<ArrayList<MenuVersionInfo>> result = gson.fromJson(response.get().toString(), new TypeToken<HttpResult<ArrayList<MenuVersionInfo>>>(){}.getType());
-        if (result.success){
-            if (result.data == null)
-                return null;
-            DBOperator dbOpr = mainActivity.getDbOperator();
-            //collect all change into a set to remove the duplicate dishid
-            Set<Integer> dishIdSet = new HashSet<>();
-            Set<Integer> dishConfigIdSet = new HashSet<>();
-            int maxVersion = 0;//get the biggest version number in this update
-            for (int i = 0; i < result.data.size(); i++) {
-                MenuVersionInfo mvi = result.data.get(i);
-                if (mvi.type == InstantValue.MENUCHANGE_TYPE_DISHCONFIGSOLDOUT){
-                    dishConfigIdSet.add(mvi.objectId);
-                } else if (mvi.type == InstantValue.MENUCHANGE_TYPE_DISHSOLDOUT) {
-                    dishIdSet.add(mvi.objectId);
-                }
-                if (mvi.id > maxVersion)
-                    maxVersion = mvi.id;
-            }
-            //reload info about dishes in dishIdSet
-            ArrayList<Integer> dishIdList = new ArrayList<>();
-            dishIdList.addAll(dishIdSet);
-            ArrayList<Integer> dishConfigIdList = new ArrayList<>();
-            dishConfigIdList.addAll(dishConfigIdSet);
-            boolean bSyncDishes = synchronizeDishes(dishIdList);
-            boolean bSyncDishConfigs = synchronizeDishConfig(dishConfigIdList);
-            if (bSyncDishes & bSyncDishConfigs){//only persist the maxVersion while sync the dishes successfully
-                dbOpr.deleteAllData(MenuVersion.class);
-                MenuVersion mv = new MenuVersion(1, maxVersion);
-                dbOpr.saveObjectByCascade(mv);
-                HashMap<String, ArrayList<Integer>> map = new HashMap<>();
-                map.put("dish", dishIdList);
-                map.put("dishConfig", dishConfigIdList);
-                return map;
-            }
-        } else {
-            Log.e(logTag, "get false from server while Check Menu Version");
-            MainActivity.LOG.error("get false from server while Check Menu Version");
-            sendErrorMessageToToast("get false from server while Check Menu Version");
-        }
-        return null;
-    }
-
-    /**
-     * load dishes data from server by the id list;
-     * compare the SOLDOUT and PROMOTION value with the local data, if different, modify local data
-     * @param dishIdList
-     * @return false while exception occur.
-     */
-    private boolean synchronizeDishes(ArrayList<Integer> dishIdList){
-        if (dishIdList.isEmpty())
-            return true;
-        String sIds = dishIdList.toString().replace("[","").replace("]","").replace(" ","");
-        Request<JSONObject> reqDish = NoHttp.createJsonObjectRequest(InstantValue.URL_TOMCAT + "/menu/querydishbyidlist", RequestMethod.POST);
-        reqDish.add("dishIdList", sIds);
-        Response<JSONObject> respDish = NoHttp.startRequestSync(reqDish);
-        if (respDish.getException() != null){
-            Log.e(logTag, "get Exception while call menu/querydishbyidlist for dishidlist = "+ dishIdList+", Exception is "+ respDish.getException());
-            MainActivity.LOG.error("get Exception while call menu/querydishbyidlist for dishidlist = "+ dishIdList+", Exception is "+ respDish.getException());
-            sendErrorMessageToToast("get Exception while call menu/querydishbyidlist for dishidlist = "+ dishIdList+", Exception is "+ respDish.getException());
-            return false;
-        }
-        HttpResult<ArrayList<Dish>> result = gson.fromJson(respDish.get().toString(), new TypeToken<HttpResult<ArrayList<Dish>>>(){}.getType());
-        if (!result.success){
-            Log.e(logTag, "get false value while call menu/querydishbyidlist for dishidlist = "+ dishIdList+", Exception is "+ respDish.getException());
-            MainActivity.LOG.error("get false value while call menu/querydishbyidlist for dishidlist = "+ dishIdList+", Exception is "+ respDish.getException());
-            sendErrorMessageToToast("get false value while call menu/querydishbyidlist for dishidlist = "+ dishIdList+", Exception is "+ respDish.getException());
-            return false;
-        }
-        ArrayList<Dish> dishes = result.data;
-        DBOperator dbOpr = mainActivity.getDbOperator();
-        for (int i = 0; i < dishes.size(); i++) {
-            Dish dish = dishes.get(i);
-            Dish dbDish = dbOpr.queryDishById(dish.getId());
-            if (dbDish == null){
-                sendErrorMessageToToast("find unrecognized dish '"+dish.getFirstLanguageName()+"', please refresh data on this device.");
-                return false;
-            }
-            if (dish.isSoldOut() != dbDish.isSoldOut()) {
-                dbDish.setSoldOut(dish.isSoldOut());
-                dbOpr.updateObject(dbDish);
-            }
-            if (dish.isPromotion() != dbDish.isPromotion()){
-                dbDish.setPromotion(dish.isPromotion());
-                dbDish.setOriginPrice(dish.getOriginPrice());
-                dbDish.setPrice(dish.getPrice());
-                dbOpr.updateObject(dbDish);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * load dishes data from server by the id list;
-     * compare the SOLDOUT and PROMOTION value with the local data, if different, modify local data
-     * @param dishConfigIdList
-     * @return false while exception occur.
-     */
-    private boolean synchronizeDishConfig(ArrayList<Integer> dishConfigIdList){
-        if (dishConfigIdList.isEmpty())
-            return true;
-        String sIds = dishConfigIdList.toString().replace("[","").replace("]","").replace(" ","");
-        Request<JSONObject> reqDish = NoHttp.createJsonObjectRequest(InstantValue.URL_TOMCAT + "/menu/querydishconfigbyidlist", RequestMethod.POST);
-        reqDish.add("dishConfigIdList", sIds);
-        Response<JSONObject> respDish = NoHttp.startRequestSync(reqDish);
-        if (respDish.getException() != null){
-            Log.e(logTag, "get Exception while call menu/querydishconfigbyidlist for dishConfigIdList = "+ dishConfigIdList+", Exception is "+ respDish.getException());
-            MainActivity.LOG.error("get Exception while call menu/querydishconfigbyidlist for dishConfigIdList = "+ dishConfigIdList+", Exception is "+ respDish.getException());
-            sendErrorMessageToToast("get Exception while call menu/querydishconfigbyidlist for dishConfigIdList = "+ dishConfigIdList+", Exception is "+ respDish.getException());
-            return false;
-        }
-        HttpResult<ArrayList<DishConfig>> result = gson.fromJson(respDish.get().toString(), new TypeToken<HttpResult<ArrayList<DishConfig>>>(){}.getType());
-        if (!result.success){
-            Log.e(logTag, "get false value while call menu/querydishconfigbyidlist for dishConfigIdList = "+ dishConfigIdList+", Exception is "+ respDish.getException());
-            MainActivity.LOG.error("get false value while call menu/querydishconfigbyidlist for dishConfigIdList = "+ dishConfigIdList+", Exception is "+ respDish.getException());
-            sendErrorMessageToToast("get false value while call menu/querydishconfigbyidlist for dishConfigIdList = "+ dishConfigIdList+", Exception is "+ respDish.getException());
-            return false;
-        }
-        ArrayList<DishConfig> dishConfigs = result.data;
-        DBOperator dbOpr = mainActivity.getDbOperator();
-        for (int i = 0; i < dishConfigs.size(); i++) {
-            DishConfig dishConfig = dishConfigs.get(i);
-            DishConfig dbDishConfig = (DishConfig) dbOpr.queryObjectById(dishConfig.getId(), DishConfig.class);
-            if (dbDishConfig == null){
-                sendErrorMessageToToast("find unrecognized dishConfig '"+dishConfig.getFirstLanguageName()+"', please refresh data on this device.");
-                return false;
-            }
-            if (dishConfig.isSoldOut() != dbDishConfig.isSoldOut()) {
-                dbDishConfig.setSoldOut(dishConfig.isSoldOut());
-                dbOpr.updateObject(dbDishConfig);
-            }
-        }
-        return true;
     }
 
     private void sendErrorMessageToToast(String sMsg){

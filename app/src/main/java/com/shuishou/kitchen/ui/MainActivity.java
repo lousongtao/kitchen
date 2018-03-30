@@ -59,19 +59,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final org.slf4j.Logger LOG = LoggerFactory.getLogger(MainActivity.class.getSimpleName());
     private String TAG_UPLOADERRORLOG = "uploaderrorlog";
     private String TAG_EXITSYSTEM = "exitsystem";
-    private String TAG_REFRESHDATA = "refreshdata";
     private CategoryTabListView listViewCategorys;
     private UserData loginUser;
     private ArrayList<Category1> category1s = new ArrayList<>(); // = TestData.makeCategory1();
     private HttpOperator httpOperator;
-    private DBOperator dbOperator;
     private RecyclerSoldoutDishAdapter soldoutDishAdapter;
     private ArrayList<Dish> soldoutDishList = new ArrayList<>();
-//    public static final int REFRESHMENUHANDLER_MSGWHAT_REFRESHDISH = 1;
-//    public static final int REFRESHMENUHANDLER_MSGWHAT_REFRESHDISHCONFIG = 2;
-//    private Handler refreshMenuHandler;
-//    private Timer refreshMenuTimer;
-//    private int refreshMenuInterval = 60 * 1000;
 
     private SparseArray<DishDisplayFragment> mapDishDisplayFragments = new SparseArray<>();
     private SparseArray<DishCellComponent> mapDishCellComponents = new SparseArray<>();
@@ -127,17 +120,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lvSoldout.setLayoutManager(layoutManager);
         lvSoldout.setAdapter(soldoutDishAdapter);
 
-        TextView tvRefreshData = (TextView)findViewById(R.id.drawermenu_refreshdata);
         TextView tvUploadErrorLog = (TextView)findViewById(R.id.drawermenu_uploaderrorlog);
         TextView tvExit = (TextView)findViewById(R.id.drawermenu_exit);
         listViewCategorys = (CategoryTabListView) findViewById(R.id.categorytab_listview);
 
         tvUploadErrorLog.setTag(TAG_UPLOADERRORLOG);
         tvExit.setTag(TAG_EXITSYSTEM);
-        tvRefreshData.setTag(TAG_REFRESHDATA);
         tvUploadErrorLog.setOnClickListener(this);
         tvExit.setOnClickListener(this);
-        tvRefreshData.setOnClickListener(this);
 
         //init tool class, NoHttp
         NoHttp.initialize(this);
@@ -146,10 +136,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         InstantValue.URL_TOMCAT = IOOperator.loadServerURL(InstantValue.FILE_SERVERURL);
         httpOperator = new HttpOperator(this);
-        dbOperator = new DBOperator(this);
+        httpOperator.loadMenuData();
 
-        buildMenu();
-//        startRefreshMenuTimer();
+    }
+
+    private void initSoldoutList(){
+        for (int i = 0; i< category1s.size(); i++){
+            Category1 c1 = category1s.get(i);
+            if (c1.getCategory2s() != null){
+                for (int j = 0; j < c1.getCategory2s().size(); j++){
+                    Category2 c2 = c1.getCategory2s().get(j);
+                    if (c2.getDishes() != null){
+                        for (int k = 0; k < c2.getDishes().size(); k++){
+                            if (c2.getDishes().get(k).isSoldOut()){
+                                soldoutDishList.add(c2.getDishes().get(k));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!soldoutDishList.isEmpty()){
+            soldoutDishAdapter.notifyDataSetChanged();
+        }
+    }
+
+    public void buildMenu(){
+        Collections.sort(category1s, new Comparator<Category1>() {
+            @Override
+            public int compare(Category1 category1, Category1 t1) {
+                return category1.getSequence() - t1.getSequence();
+            }
+        });
+        initialDishCellComponents();
+
+        CategoryTabAdapter categoryTabAdapter = new CategoryTabAdapter(MainActivity.this, R.layout.categorytab_listitem_layout, category1s);
+        listViewCategorys.setAdapter(categoryTabAdapter);
+        listViewCategorys.post(new Runnable() {
+            @Override
+            public void run() {
+                listViewCategorys.chooseItemByPosition(0);
+            }
+        });
+
+        progressDlgHandler.sendMessage(CommonTool.buildMessage(PROGRESSDLGHANDLER_MSGWHAT_DISMISSDIALOG));
+
+        initSoldoutList();
     }
 
     /**
@@ -216,118 +248,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-    /**
-     * set a timer to load the server menu, just now, only focus on the SOLDOUT status.
-     */
-//    private void startRefreshMenuTimer(){
-//        refreshMenuHandler = new Handler(){
-//            @Override
-//            public void handleMessage(Message msg) {
-//                super.handleMessage(msg);
-//                if (msg.what == REFRESHMENUHANDLER_MSGWHAT_REFRESHDISH){
-//                    ArrayList<Integer> dishIdList = (ArrayList<Integer>) msg.obj;
-//                    doRefreshDish(dishIdList);
-//                } else if (msg.what == REFRESHMENUHANDLER_MSGWHAT_REFRESHDISHCONFIG){
-//                    ArrayList<Integer> dishConfigIdList = (ArrayList<Integer>) msg.obj;
-//                    doRefreshDishConfig(dishConfigIdList);
-//                }
-//            }
-//        };
-//        //start timer
-//        refreshMenuTimer = new Timer();
-//        refreshMenuTimer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                doRefreshMenuTimerAction();
-//            }
-//        }, 1, refreshMenuInterval);
-//    }
-
-//    private void doRefreshDishConfig(ArrayList<Integer> dishConfigIdList){
-//        for (Integer dishConfigId : dishConfigIdList){
-//            DishConfig dbConfig = (DishConfig) dbOperator.queryObjectById(dishConfigId, DishConfig.class);
-//            for (Category1 c1 : category1s) {
-//                if (c1.getCategory2s() != null) {
-//                    for (Category2 c2 : c1.getCategory2s()) {
-//                        if (c2.getDishes() != null){
-//                            for (Dish dish : c2.getDishes()){
-//                                if (dish.getConfigGroups() != null){
-//                                    for (DishConfigGroup group : dish.getConfigGroups()){
-//                                        if (group.getDishConfigs() != null){
-//                                            for (DishConfig config : group.getDishConfigs()){
-//                                                if (config.getId() == dishConfigId){
-//                                                    config.setSoldOut(dbConfig.isSoldOut());
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    private void doRefreshDish(ArrayList<Integer> dishIdList){
-//        //loop to find Dish Object depending on the id, reload the data from database
-//        for(Integer dishId : dishIdList){
-//            Dish dish = dbOperator.queryDishById(dishId);
-//            DishCellComponent dishCell = mapDishCellComponents.get(dish.getId());
-//            Dish oldDish = dishCell.getDish();
-//            if (dish.isSoldOut() != oldDish.isSoldOut()){
-//                dishCell.changeSoldoutStatus(dish);
-//            }
-//        }
-//    }
-//
-//    private void doRefreshMenuTimerAction(){
-//        if(InstantValue.URL_TOMCAT == null || InstantValue.URL_TOMCAT.length() == 0)
-//            return;
-//        //if local database is null, stop check
-//        if (category1s == null || category1s.isEmpty())
-//            return;
-//        MenuVersion mv = (MenuVersion) dbOperator.queryObjectById(1, MenuVersion.class);
-//        int localVersion = 0;
-//        if (mv != null) {
-//            localVersion = mv.getVersion();
-//        }
-//
-//        HashMap<String, ArrayList<Integer>> resultMap = httpOperator.checkMenuVersion(localVersion);
-//        if (resultMap != null && !resultMap.isEmpty()){
-//            ArrayList<Integer> dishIdList = resultMap.get("dish");
-//            ArrayList<Integer> dishConfigIdList = resultMap.get("dishConfig");
-//            if (dishIdList != null && !dishIdList.isEmpty())
-//                refreshMenuHandler.sendMessage(CommonTool.buildMessage(REFRESHMENUHANDLER_MSGWHAT_REFRESHDISH, dishIdList));
-//            if (dishConfigIdList != null && !dishConfigIdList.isEmpty())
-//                refreshMenuHandler.sendMessage(CommonTool.buildMessage(REFRESHMENUHANDLER_MSGWHAT_REFRESHDISHCONFIG, dishConfigIdList));
-//        }
-//    }
-
-    public void buildMenu(){
-        category1s = dbOperator.queryAllMenu();
-        Collections.sort(category1s, new Comparator<Category1>() {
-            @Override
-            public int compare(Category1 category1, Category1 t1) {
-                return category1.getSequence() - t1.getSequence();
-            }
-        });
-        initialDishCellComponents();
-
-        CategoryTabAdapter categoryTabAdapter = new CategoryTabAdapter(MainActivity.this, R.layout.categorytab_listitem_layout, category1s);
-        listViewCategorys.setAdapter(categoryTabAdapter);
-        listViewCategorys.post(new Runnable() {
-            @Override
-            public void run() {
-                listViewCategorys.chooseItemByPosition(0);
-            }
-        });
-
-        progressDlgHandler.sendMessage(CommonTool.buildMessage(PROGRESSDLGHANDLER_MSGWHAT_DISMISSDIALOG));
-    }
-
     /**
      * dish 对象发生变化时, 替换缓存的对象, 并刷新dishcell,
      * 如果变化后状态为soldout, 将dish加入soldout列表并置顶
@@ -352,11 +272,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         if (soldoutDishList.get(ik).getId() == d.getId()){
                                             soldoutDishList.remove(ik);
                                             soldoutDishAdapter.notifyItemChanged(ik);
-                                            soldoutDishAdapter.notifyItemRangeChanged(ik, soldoutDishList.size());
+//                                            soldoutDishAdapter.notifyItemRangeChanged(ik, soldoutDishList.size());
+                                            soldoutDishAdapter.notifyDataSetChanged();
+                                            break;
                                         }
                                     }
                                 }
                                 return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * dishconfig 对象发生变化时, 替换缓存的对象, 替换后不用考虑其他dish下面的DishConfig, 因为再次打开界面, 会自动根据最新的对象soldout来显示状态
+     * @param dc
+     */
+    public void afterDishConfigStatusChange(DishConfig dc){
+        for (Category1 c1 : category1s) {
+            if (c1.getCategory2s() != null) {
+                for (Category2 c2 : c1.getCategory2s()) {
+                    if (c2.getDishes() != null){
+                        for (Dish dish : c2.getDishes()){
+                            if (dish.getConfigGroups() != null){
+                                for (DishConfigGroup group : dish.getConfigGroups()){
+                                    if (group.getDishConfigs() != null){
+                                        for (int i = 0; i < group.getDishConfigs().size(); i++){
+                                            if (group.getDishConfigs().get(i).getId() == dc.getId()){
+                                                group.getDishConfigs().set(i, dc);//由于多个dish会共用相同的DishConfig对象, 所以这里不能break, 要循环到结尾为止
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -377,66 +327,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         progressDlg = ProgressDialog.show(this, title, message);
     }
 
-    public DBOperator getDbOperator(){
-        return dbOperator;
-    }
-
     public HttpOperator getHttpOperator(){
         return httpOperator;
-    }
-
-    public void persistMenu(){
-        dbOperator.clearMenu();
-        dbOperator.saveObjectsByCascade(category1s);
-    }
-
-    /**
-     * 1. stop the refresh timer
-     * 2. clear local database
-     * 3. clear local dish pictures
-     * 4. load data from server, including desk, menu, menuversion, dish picture files
-     * 5. after loading finish, redraw the UI
-     */
-    public void onRefreshData(){
-//        if (refreshMenuTimer != null){
-//            refreshMenuTimer.cancel();
-//            refreshMenuTimer.purge();
-//            refreshMenuTimer = null;
-//        }
-//        refreshMenuHandler = null;
-        //clear all data and picture files
-        dbOperator.deleteAllData(MenuVersion.class);
-        dbOperator.deleteAllData(Dish.class);
-        dbOperator.deleteAllData(Category2.class);
-        dbOperator.deleteAllData(Category1.class);
-        // synchronize and persist
-        httpOperator.loadMenuVersionData();
-        httpOperator.loadMenuData();
-    }
-
-    public void popRestartDialog(String msg){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(msg)
-                .setIcon(R.drawable.info)
-                .setPositiveButton("Restart", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        android.os.Process.killProcess(android.os.Process.myPid());
-                        System.exit(1);
-                    }
-                });
-        AlertDialog dlg = builder.create();
-        dlg.setCancelable(false);
-        dlg.setCanceledOnTouchOutside(false);
-        dlg.show();
     }
 
     @Override
     public void onClick(View v) {
         if (TAG_UPLOADERRORLOG.equals(v.getTag())){
             IOOperator.onUploadErrorLog(this);
-        } else if (TAG_REFRESHDATA.equals(v.getTag())){
-            onRefreshData();
         } else if (TAG_EXITSYSTEM.equals(v.getTag())){
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Confirm")
