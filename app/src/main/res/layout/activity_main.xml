@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <LinearLayout
+        android:id="@+id/activity_main"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.shuishou.kitchen.ui.CategoryTabListView
+            android:id="@+id/categorytab_listview"
+            android:layout_width="180dp"
+            android:layout_height="match_parent"
+            android:background="@color/color_CategoryTabArea" />
+
+        <FrameLayout
+            android:id="@+id/dishdisplayarea_layout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/color_OrangeTheme_ChoosedFoodBackgroundArea">
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="260dp"
+            android:layout_height="match_parent"
+            android:background="@color/color_OrangeTheme_ChoosedFoodBackgroundArea"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_CategoryTabArea"
+                android:gravity="center"
+                android:text="SOLDOUT"
+                android:textColor="@color/color_OrangeTheme_Category1Font"
+                android:textSize="24sp" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/list_soldout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:layout_gravity="start">
+
+        <TextView
+            android:id="@+id/drawermenu_refreshdata"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:paddingTop="20dp"
+            android:text="REFRESH DATA"
+            android:textSize="30sp" />
+        <TextView
+            android:id="@+id/drawermenu_uploaderrorlog"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:paddingTop="20dp"
+            android:text="UPLOAD ERROR LOG"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/drawermenu_exit"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:paddingTop="20dp"
+            android:text="EXIT"
+            android:textSize="30sp" />
+    </LinearLayout>
+
+
+</android.support.v4.widget.DrawerLayout>

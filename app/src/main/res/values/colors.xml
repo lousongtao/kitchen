@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#ff4081</color>
+    <color name="colorWhite">#ffffff</color>
+    <color name="colorBlack">#000000</color>
+
+
+    <color name="colorFoodAreaBG">#751a0e</color>
+
+    <color name="colorHalfTransparent">#e00000</color>
+    <color name="color_CategoryTabArea">#141414</color>
+    <color name="color_OrangeTheme_ChoosedFoodBackgroundArea">#f3efd4</color>
+    <color name="color_OrangeTheme_ChoosedFoodFont">#777376</color>
+    <color name="color_OrangeTheme_FoodDisplayArea">#F2F2F2</color>
+    <color name="color_OrangeTheme_Category1Font">#edbd11</color>
+    <color name="color_OrangeTheme_Category2Font">#a78c52</color>
+    <color name="color_OrangeTheme_FoodCellBackground">#fafafa</color>
+    <color name="color_OrangeTheme_FoodDisplayFragmentBackground">#f2f2f2</color>
+
+    <color name="light_black">#fd383838</color>
+    <color name="red">#ea0f1e</color>
+
+    <color name="color_onsale">#98E165</color>
+    <color name="color_soldout">#751a0e</color>
+</resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.shuishou.kitchen.ui.CategoryTabLayoutItem
+    xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <FrameLayout
+        android:id="@+id/view_header_category1"
+        android:layout_width="match_parent"
+        android:layout_height="100dp">
+
+        <TextView
+            android:id="@+id/textview_header_category1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:background="@drawable/category1_bg"
+            android:ellipsize="end"
+            android:gravity="center_vertical|center_horizontal"
+            android:singleLine="true"
+            android:textColor="@color/color_OrangeTheme_Category1Font"
+            android:textSize="36sp" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/view_content_category2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/view_header_category1"
+        android:orientation="vertical">
+
+    </LinearLayout>
+
+</com.shuishou.kitchen.ui.CategoryTabLayoutItem>

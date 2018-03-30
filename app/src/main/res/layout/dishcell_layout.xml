@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="240dp"
+    android:layout_height="100dp"
+    android:orientation="vertical">
+
+    <com.shuishou.kitchen.ui.components.DishNameTextView
+        android:id="@+id/foodNameText"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:ellipsize="end"
+        android:gravity="top"
+        android:textColor="@color/color_OrangeTheme_ChoosedFoodFont"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+
+    <LinearLayout
+        android:id="@+id/function_layout"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_sale"
+            android:layout_width="120dp"
+            android:layout_height="match_parent"
+            android:text="On Sale" />
+
+    </LinearLayout>
+
+</LinearLayout>
