@@ -412,9 +412,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        refreshMenuTimer = null;
-//    }
+    @Override
+    protected void onDestroy() {
+        //because the listener instance hold this activity, must release them before the activity destroy, otherwise throw WindowManager$BadTokenException
+        DishConfigSoldListener.getInstance(this).release();
+        DishSoldListener.getInstance(this).release();
+        super.onDestroy();
+    }
 }

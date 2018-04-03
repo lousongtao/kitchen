@@ -190,7 +190,8 @@ public class HttpOperator {
     }
 
     private void sendErrorMessageToToast(String sMsg){
-        mainActivity.getToastHandler().sendMessage(CommonTool.buildMessage(MainActivity.TOASTHANDLERWHAT_ERRORMESSAGE,sMsg));
+        if (mainActivity != null)
+            mainActivity.getToastHandler().sendMessage(CommonTool.buildMessage(MainActivity.TOASTHANDLERWHAT_ERRORMESSAGE,sMsg));
     }
 
     public void uploadErrorLog(File file, String machineCode){

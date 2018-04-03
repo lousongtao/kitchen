@@ -153,4 +153,10 @@ public class DishConfigSoldListener implements View.OnClickListener{
         confirmDialog.setMessage(msg);
         confirmDialog.show();
     }
+
+    public void release(){
+        if (confirmDialog.isShowing())
+            confirmDialog.dismiss();
+        instance = null;
+    }
 }

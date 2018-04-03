@@ -70,6 +70,10 @@ public class DishSoldListener implements View.OnClickListener{
     };
     private DishSoldListener(MainActivity mainActivity){
         this.mainActivity = mainActivity;
+        makeConfirmDialog();
+    }
+
+    private void makeConfirmDialog(){
         confirmDialog = new AlertDialog.Builder(mainActivity, AlertDialog.THEME_HOLO_LIGHT)
                 .setIcon(R.drawable.info)
                 .setTitle("Confirm")
@@ -133,7 +137,16 @@ public class DishSoldListener implements View.OnClickListener{
         button = (Button)v;
         String msg = "Do you want to set dish [" + dish.getFirstLanguageName() +"] to the status of "
                 + (dish.isSoldOut() ? "ON SALE" : "SOLDOUT") + "?";
+        if (confirmDialog == null){
+            makeConfirmDialog();
+        }
         confirmDialog.setMessage(msg);
         confirmDialog.show();
+    }
+
+    public void release(){
+        if (confirmDialog.isShowing())
+            confirmDialog.dismiss();
+        instance = null;
     }
 }
