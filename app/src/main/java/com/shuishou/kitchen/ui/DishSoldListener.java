@@ -53,7 +53,7 @@ public class DishSoldListener implements View.OnClickListener{
             } else if (msg.what == PROGRESSDLGHANDLER_MSGWHAT_SHOWEXCEPTION){
                 AlertDialog dlg = new AlertDialog.Builder(mainActivity)
                         .setTitle("Exception")
-                        .setMessage((String)msg.obj)
+                        .setMessage(String.valueOf(msg.obj))
                         .setNegativeButton("CLOSE", null)
                         .create();
                 dlg.show();
@@ -125,6 +125,10 @@ public class DishSoldListener implements View.OnClickListener{
         if (instance == null)
             instance = new DishSoldListener(mainActivity);
         return instance;
+    }
+
+    public static void rebuildInstance(MainActivity mainActivity){
+        instance = new DishSoldListener(mainActivity);
     }
 
     public void startProgressDialog(String title, String message){

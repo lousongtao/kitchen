@@ -76,4 +76,12 @@ class DishCellComponent {
         btnSell.setText(dish.isSoldOut() ? TXT_SOLDOUT : TXT_ONSALE);
         btnSell.setBackgroundResource(dish.isSoldOut() ? R.color.color_soldout : R.color.color_onsale);
     }
+
+    public void setListener(){
+        dishSoldListener = DishSoldListener.getInstance(mainActivity);
+        showDishConfigListener = ShowDishConfigListener.getInstance(mainActivity);
+        btnSell.setOnClickListener(dishSoldListener);
+        if (btnFlavor != null)
+            btnFlavor.setOnClickListener(showDishConfigListener);
+    }
 }

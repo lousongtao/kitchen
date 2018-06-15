@@ -62,4 +62,7 @@ public class RecyclerSoldoutDishAdapter extends RecyclerView.Adapter<RecyclerSol
         return listSoldoutDish.size();
     }
 
+    public void resetListener(){
+        listener = DishSoldListener.getInstance(mainActivity);
+    }
 }

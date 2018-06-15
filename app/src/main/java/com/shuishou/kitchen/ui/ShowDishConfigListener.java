@@ -60,6 +60,10 @@ public class ShowDishConfigListener implements View.OnClickListener{
         return instance;
     }
 
+    public static void rebuildInstance(MainActivity mainActivity){
+        instance = new ShowDishConfigListener(mainActivity);
+    }
+
     @Override
     public void onClick(View v) {
         dish = (Dish) v.getTag();
@@ -119,5 +123,9 @@ public class ShowDishConfigListener implements View.OnClickListener{
         param.width = WindowManager.LayoutParams.MATCH_PARENT;
         param.height = WindowManager.LayoutParams.WRAP_CONTENT;
         window.setAttributes(param);
+    }
+
+    public void release(){
+        instance = null;
     }
 }

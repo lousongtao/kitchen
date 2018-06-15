@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 mapDishCellComponents.get(d.getId()).changeSoldoutStatus(d);//修改显示效果
                                 //刷新列表
                                 if (d.isSoldOut()){
-                                    soldoutDishList.add(d);
+                                    soldoutDishList.add(0, d);
                                     soldoutDishAdapter.notifyDataSetChanged();
                                 } else {
                                     for (int ik = 0; ik< soldoutDishList.size(); ik++){
@@ -393,6 +393,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    /**
+     * 客户现场经常发现点菜不能加入到右侧列表的现象; 初步推测, 是原有的listener对象绑定了老的MainActivity对象.
+     * 尝试一下每次resume时, 重构这些listener并将其与控件绑定
+     */
+    protected void onResume() {
+        super.onResume();
+        DishSoldListener.rebuildInstance(this);
+        DishConfigSoldListener.rebuildInstance(this);
+        ShowDishConfigListener.rebuildInstance(this);
+        soldoutDishAdapter.resetListener();
+        for (int i = 0; i < mapDishCellComponents.size(); i++) {
+            int key = mapDishCellComponents.keyAt(i);
+            DishCellComponent cell = mapDishCellComponents.get(key);
+            cell.setListener();
+        }
+    }
+
+    @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
         ActivityManager activityManager = (ActivityManager) getApplicationContext() .getSystemService(Context.ACTIVITY_SERVICE);
@@ -417,6 +435,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //because the listener instance hold this activity, must release them before the activity destroy, otherwise throw WindowManager$BadTokenException
         DishConfigSoldListener.getInstance(this).release();
         DishSoldListener.getInstance(this).release();
+        ShowDishConfigListener.getInstance(this).release();
         super.onDestroy();
     }
 }

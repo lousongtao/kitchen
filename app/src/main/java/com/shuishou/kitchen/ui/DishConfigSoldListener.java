@@ -144,6 +144,9 @@ public class DishConfigSoldListener implements View.OnClickListener{
         return instance;
     }
 
+    public static void rebuildInstance(MainActivity mainActivity){
+        instance = new DishConfigSoldListener(mainActivity);
+    }
     @Override
     public void onClick(View v) {
         dishConfig = (DishConfig) v.getTag();
