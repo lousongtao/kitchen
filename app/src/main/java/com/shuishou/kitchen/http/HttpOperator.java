@@ -212,4 +212,27 @@ public class HttpOperator {
         requestQueue.add(WHAT_VALUE_LOGIN, request, responseListener);
     }
 
+    /**
+     * 得到服务端可用的apk文件列表
+     * @return
+     */
+    public ArrayList<String> getUpgradeApkFiles(){
+        Request<JSONObject> request = NoHttp.createJsonObjectRequest(InstantValue.URL_TOMCAT + "/common/checkupgradeapk", RequestMethod.GET);
+        Response<JSONObject> response = NoHttp.startRequestSync(request);
+        if (response.getException() != null){
+            Log.e(logTag, "chechMenuVersion: There are Exception to getUpgradeApkFiles\n"+ response.getException().getMessage() );
+            MainActivity.LOG.error("chechMenuVersion: There are Exception to getUpgradeApkFiles\n"+ response.getException().getMessage() );
+            sendErrorMessageToToast("Http:getUpgradeApkFiles: " + response.getException().getMessage());
+            return null;
+        }
+        HttpResult<ArrayList<String>> result = gson.fromJson(response.get().toString(), new TypeToken<HttpResult<ArrayList<String>>>(){}.getType());
+        if (result.success){
+            return result.data;
+        } else {
+            Log.e(logTag, "get false from server while Check upgrade apk");
+            MainActivity.LOG.error("get false from server while Check upgrade apk");
+            sendErrorMessageToToast("get false from server while Check upgrade apk");
+            return null;
+        }
+    }
 }

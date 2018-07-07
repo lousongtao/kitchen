@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final org.slf4j.Logger LOG = LoggerFactory.getLogger(MainActivity.class.getSimpleName());
     private String TAG_UPLOADERRORLOG = "uploaderrorlog";
     private String TAG_EXITSYSTEM = "exitsystem";
+    private String TAG_UPGRADEAPP = "upgradeapp";
     private CategoryTabListView listViewCategorys;
     private UserData loginUser;
     private ArrayList<Category1> category1s = new ArrayList<>(); // = TestData.makeCategory1();
@@ -122,12 +123,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         TextView tvUploadErrorLog = (TextView)findViewById(R.id.drawermenu_uploaderrorlog);
         TextView tvExit = (TextView)findViewById(R.id.drawermenu_exit);
+        TextView tvUpgradeAPP = (TextView) findViewById(R.id.drawermenu_upgradeapp);
         listViewCategorys = (CategoryTabListView) findViewById(R.id.categorytab_listview);
 
         tvUploadErrorLog.setTag(TAG_UPLOADERRORLOG);
         tvExit.setTag(TAG_EXITSYSTEM);
+        tvUpgradeAPP.setTag(TAG_UPGRADEAPP);
         tvUploadErrorLog.setOnClickListener(this);
         tvExit.setOnClickListener(this);
+        tvUpgradeAPP.setOnClickListener(this);
 
         //init tool class, NoHttp
         NoHttp.initialize(this);
@@ -347,6 +351,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     })
                     .setNegativeButton("No", null);
             builder.create().show();
+        } else if (TAG_UPGRADEAPP.equals(v.getTag())){
+            UpgradeAppDialog dlg = new UpgradeAppDialog(this);
+            dlg.showDialog();
         }
     }
 

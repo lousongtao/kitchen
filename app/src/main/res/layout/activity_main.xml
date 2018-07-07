@@ -65,6 +65,14 @@
             android:textSize="30sp" />
 
         <TextView
+            android:id="@+id/drawermenu_upgradeapp"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:paddingTop="20dp"
+            android:text="UPGRADE APP"
+            android:textSize="30sp" />
+
+        <TextView
             android:id="@+id/drawermenu_exit"
             android:layout_width="match_parent"
             android:layout_height="80dp"
